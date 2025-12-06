@@ -6,41 +6,24 @@ class Jugada
     def to_s()
         self.class.name
     end
+
+    def puntos(contrincante)
+        if self.class == contrincante.class
+            [0, 0]
+        elsif MAPA_DE_X_PIERDE_Y[self.class] == contrincante.class
+            [0, 1]
+        else
+            [1, 0]
+        end
+    end
 end
 
 class Piedra < Jugada 
-    def puntos (contrincante)
-        if self.class == contrincante.class
-            [0, 0]
-        elsif contrincante.class == Papel
-            [0, 1]
-        elsif contrincante.class == Tijera
-            [1,0]
-        end
-    end
 end
 
 class Papel < Jugada 
-    def puntos (contrincante)
-        if self.class == contrincante.class
-            [0, 0]
-        elsif contrincante.class == Tijera
-            [0, 1]
-        elsif contrincante.class == Piedra
-            [1,0]
-        end
-    end
 end
 class Tijera < Jugada 
-    def puntos (contrincante)
-        if self.class == contrincante.class
-            [0, 0]
-        elsif contrincante.class == Piedra
-            [0, 1]
-        elsif contrincante.class == Papel
-            [1,0]
-        end
-    end
 end
 
 MAPA_DE_STR_A_CLASE = {
@@ -52,6 +35,8 @@ MAPA_DE_STR_A_CLASE = {
 JUGADAS = [Piedra, Papel, Tijera]
 
 MAPA_DE_PESOS = { Piedra => 50, Papel => 25, Tijera => 10 }
+
+MAPA_DE_X_PIERDE_Y = {Tijera => Piedra, Papel => Tijera, Piedra => Papel} 
 
 class Manual < Estrategia
     def prox()
@@ -65,7 +50,7 @@ end
 
 class Uniforme < Estrategia
     def prox(lista)
-        randIndex = rand(lista.length - 1)
+        randIndex = rand(lista.length)
         jugada = lista[randIndex].new
     end
 
@@ -95,7 +80,7 @@ end
 class Copiar < Estrategia
     def prox(jugada_oponente)
         if jugada_oponente.nil?
-            rndIndex = rand(JUGADAS.length - 1)
+            rndIndex = rand(JUGADAS.length)
             JUGADAS[rndIndex]
         else
             jugada_oponente
@@ -104,44 +89,88 @@ class Copiar < Estrategia
     end
 end
 
-# def Pensar < Estrategia
+class Pensar < Estrategia
+    attr_accessor :historico_jugadas_contrincante
+    attr_reader :historico_jugadas_contrincante
 
-# end
+    def initialize()
+        @historico_jugadas_contrincante = {Piedra => 0, Papel => 0, Tijera => 0}
+    end
+    def prox()
+        mayor_frecuencia = 0
+        jugada_frecuente = nil
+        @historico_jugadas_contrincante.each do |jugada, frecuencia|
+            if mayor_frecuencia < frecuencia
+                mayor_frecuencia = frecuencia
+                jugada_frecuente = jugada
+            end    
+        end
+
+        if jugada_frecuente.nil?
+            randIndex = rand(JUGADAS.length)
+            jugada_frecuente = JUGADAS[randIndex]
+        end
+
+        mejor_jugada = MAPA_DE_X_PIERDE_Y[jugada_frecuente].new
+
+    end
+end
 
 class Partida
     @@nombre_jugador1 = "Pepe"
-    @@estrategia_jugador1 = Uniforme.new
+    @@estrategia_jugador1 = Pensar.new
     @@nombre_jugador2 = "Popo"
-    @@estrategia_jugador2 = Sesgada.new
+    @@estrategia_jugador2 = Pensar.new
     @@modo_de_juego = 0
-    @@modo_de_juego_limite = 4
+    @@modo_de_juego_limite = 10
     @@puntaje_jugador1 = 0
     @@puntaje_jugador2 = 0
     @@rondas = 0
 
     def iniciar_partida()
+        ultima_jugada1 = nil
+        ultima_jugada2 = nil
         estrategia1 = @@estrategia_jugador1.class
         estrategia2 = @@estrategia_jugador2.class
         loop do
 
             if estrategia1 == Uniforme
                 jugada_1 = @@estrategia_jugador1.prox(JUGADAS)
-            elsif estrategia1 == Manual
+            elsif estrategia1 == Manual or estrategia1 == Pensar
                 jugada_1 = @@estrategia_jugador1.prox()
             elsif estrategia1 == Sesgada
                 jugada_1 = @@estrategia_jugador1.prox(MAPA_DE_PESOS)
+            elsif estrategia1 == Copiar
+                jugada_1 = @@estrategia_jugador1.prox(ultima_jugada2)
             end
 
             if estrategia2 == Uniforme
                 jugada_2 = @@estrategia_jugador2.prox(JUGADAS)
-            elsif estrategia2 == Manual
+            elsif estrategia2 == Manual or estrategia2 == Pensar
                 jugada_2 = @@estrategia_jugador2.prox()
             elsif estrategia2 == Sesgada
                 jugada_2 = @@estrategia_jugador2.prox(MAPA_DE_PESOS)
+            elsif estrategia2 == Copiar
+                jugada_2 = @@estrategia_jugador2.prox(ultima_jugada1)
+            end
+
+            if (estrategia1 == Copiar)
+                ultima_jugada2 = jugada_2
+            end
+            if (estrategia2 == Copiar)
+                ultima_jugada1 = jugada_1
+            end
+            if (estrategia1 == Pensar)
+                frecuencia_actual = @@estrategia_jugador1.historico_jugadas_contrincante[jugada_2.class] 
+                @@estrategia_jugador1.historico_jugadas_contrincante[jugada_2.class] = frecuencia_actual + 1
+            end
+            if (estrategia2 == Pensar)
+                frecuencia_actual = @@estrategia_jugador2.historico_jugadas_contrincante[jugada_1.class] 
+                @@estrategia_jugador2.historico_jugadas_contrincante[jugada_1.class] = frecuencia_actual + 1
             end
 
             resultado = jugada_1.puntos(jugada_2)
-
+            
             if resultado == [1, 0]
                 @@puntaje_jugador1 = @@puntaje_jugador1 + 1
             elsif resultado == [0, 1]
@@ -151,8 +180,22 @@ class Partida
             puts "Estrategias:\n P1: #{jugada_1}, P2: #{jugada_2}"
             puts "Resultado de la ronda:\n P1: #{@@puntaje_jugador1}, P2: #{@@puntaje_jugador2}"
 
-            comando = gets.chomp.downcase
-            if comando == "salir"
+            @@rondas = @@rondas + 1
+
+            if @@modo_de_juego == 0 and @@rondas == @@modo_de_juego_limite and @@puntaje_jugador1 > @@puntaje_jugador2
+                puts "Gana #{@@nombre_jugador1}"
+                break
+            elsif @@modo_de_juego == 0 and @@rondas == @@modo_de_juego_limite and @@puntaje_jugador1 < @@puntaje_jugador2
+                puts "Gana #{@@nombre_jugador2}"
+                break
+            elsif @@modo_de_juego == 0 and @@rondas == @@modo_de_juego_limite and @@puntaje_jugador1 == @@puntaje_jugador2
+                puts "¡Empate!"
+                break
+            elsif @@modo_de_juego == 1 and @@puntaje_jugador1 == @@modo_de_juego_limite
+                puts "Gana #{@@nombre_jugador1}"
+                break
+            elsif @@modo_de_juego == 1 and @@puntaje_jugador2 == @@modo_de_juego_limite
+                puts "Gana #{@@nombre_jugador2}"
                 break
             end
         end
