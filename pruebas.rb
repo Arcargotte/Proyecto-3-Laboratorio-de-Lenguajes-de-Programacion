@@ -40,6 +40,21 @@ class Tijera < Jugada
     end
 end
 
+MAPA_DE_STR_A_CLASE = {
+    "piedra" => Piedra,
+    "papel" => Papel,
+    "tijera" => Tijera
+}
+
+class Manual < Estrategia
+    def prox()
+        print "Inserte la próxima jugada: "
+        jugada_str = gets.chomp.downcase
+        if (MAPA_DE_STR_A_CLASE.key?(jugada_str))
+            jugada = MAPA_DE_STR_A_CLASE[jugada_str].new
+    end
+end
+
 class Uniforme < Estrategia
     def prox(lista)
         randIndex = rand(lista.length - 1)
@@ -48,3 +63,4 @@ class Uniforme < Estrategia
     end
 
 end
+
