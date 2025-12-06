@@ -51,6 +51,8 @@ MAPA_DE_STR_A_CLASE = {
 
 JUGADAS = [Piedra, Papel, Tijera]
 
+MAPA_DE_PESOS = { Piedra => 50, Papel => 25, Tijera => 10 }
+
 class Manual < Estrategia
     def prox()
         print "Inserte la próxima jugada: "
@@ -110,7 +112,7 @@ class Partida
     @@nombre_jugador1 = "Pepe"
     @@estrategia_jugador1 = Uniforme.new
     @@nombre_jugador2 = "Popo"
-    @@estrategia_jugador2 = Uniforme.new
+    @@estrategia_jugador2 = Sesgada.new
     @@modo_de_juego = 0
     @@modo_de_juego_limite = 4
     @@puntaje_jugador1 = 0
@@ -118,9 +120,25 @@ class Partida
     @@rondas = 0
 
     def iniciar_partida()
+        estrategia1 = @@estrategia_jugador1.class
+        estrategia2 = @@estrategia_jugador2.class
         loop do
-            jugada_1 = @@estrategia_jugador1.prox(JUGADAS)
-            jugada_2 = @@estrategia_jugador2.prox(JUGADAS)
+
+            if estrategia1 == Uniforme
+                jugada_1 = @@estrategia_jugador1.prox(JUGADAS)
+            elsif estrategia1 == Manual
+                jugada_1 = @@estrategia_jugador1.prox()
+            elsif estrategia1 == Sesgada
+                jugada_1 = @@estrategia_jugador1.prox(MAPA_DE_PESOS)
+            end
+
+            if estrategia2 == Uniforme
+                jugada_2 = @@estrategia_jugador2.prox(JUGADAS)
+            elsif estrategia2 == Manual
+                jugada_2 = @@estrategia_jugador2.prox()
+            elsif estrategia2 == Sesgada
+                jugada_2 = @@estrategia_jugador2.prox(MAPA_DE_PESOS)
+            end
 
             resultado = jugada_1.puntos(jugada_2)
 
@@ -130,6 +148,7 @@ class Partida
                 @@puntaje_jugador2 = @@puntaje_jugador2 + 1
             end
 
+            puts "Estrategias:\n P1: #{jugada_1}, P2: #{jugada_2}"
             puts "Resultado de la ronda:\n P1: #{@@puntaje_jugador1}, P2: #{@@puntaje_jugador2}"
 
             comando = gets.chomp.downcase
@@ -140,8 +159,6 @@ class Partida
     end
 
 end
-
-mapa_de_pesos = { Piedra => 100, Papel => 0, Tijera => 0 }
 
 partida = Partida.new
 
