@@ -10,7 +10,7 @@ class Jugada
     def puntos(contrincante)
         if self.class == contrincante.class
             [0, 0]
-        elsif MAPA_DE_X_PIERDE_Y[self.class] == contrincante.class
+        elsif MAPA_DE_X_PIERDE_Y[self.class][0] == contrincante.class or MAPA_DE_X_PIERDE_Y[self.class][1] == contrincante.class
             [0, 1]
         else
             [1, 0]
@@ -23,20 +23,30 @@ end
 
 class Papel < Jugada 
 end
+
 class Tijera < Jugada 
 end
+
+class Lagarto < Jugada 
+end
+
+class Spock < Jugada 
+end
+
 
 MAPA_DE_STR_A_CLASE = {
     "piedra" => Piedra,
     "papel" => Papel,
-    "tijera" => Tijera
+    "tijera" => Tijera,
+    "lagarto" => Lagarto,
+    "spock" => Spock
 }
 
-JUGADAS = [Piedra, Papel, Tijera]
+JUGADAS = [Piedra, Papel, Tijera, Lagarto, Spock]
 
-MAPA_DE_PESOS = { Piedra => 50, Papel => 25, Tijera => 10 }
+MAPA_DE_PESOS = { Piedra => 50, Papel => 25, Tijera => 10, Lagarto => 20, Spock => 10 }
 
-MAPA_DE_X_PIERDE_Y = {Tijera => Piedra, Papel => Tijera, Piedra => Papel} 
+MAPA_DE_X_PIERDE_Y = { Papel => [Tijera, Lagarto], Piedra => [Papel, Spock], Lagarto => [Piedra, Tijera], Spock => [Lagarto, Papel], Tijera => [Spock, Piedra] } 
 
 class Manual < Estrategia
     def prox()
@@ -94,7 +104,7 @@ class Pensar < Estrategia
     attr_reader :historico_jugadas_contrincante
 
     def initialize()
-        @historico_jugadas_contrincante = {Piedra => 0, Papel => 0, Tijera => 0}
+        @historico_jugadas_contrincante = { Piedra => 0, Papel => 0, Tijera => 0, Spock => 0, Lagarto => 0 }
     end
     def prox()
         mayor_frecuencia = 0
@@ -111,7 +121,9 @@ class Pensar < Estrategia
             jugada_frecuente = JUGADAS[randIndex]
         end
 
-        mejor_jugada = MAPA_DE_X_PIERDE_Y[jugada_frecuente].new
+        mejores_jugadas = MAPA_DE_X_PIERDE_Y[jugada_frecuente]
+        randIndex = rand(mejores_jugadas.length)
+        mejor_jugada = mejores_jugadas[randIndex].new
 
     end
 end
@@ -122,7 +134,7 @@ class Partida
     @@nombre_jugador2 = "Popo"
     @@estrategia_jugador2 = Pensar.new
     @@modo_de_juego = 0
-    @@modo_de_juego_limite = 10
+    @@modo_de_juego_limite = 100
     @@puntaje_jugador1 = 0
     @@puntaje_jugador2 = 0
     @@rondas = 0
