@@ -1,4 +1,4 @@
-# Proyecto 3: Piedra, Papel, Tikera, Lagarto, Spock (CI-3661)
+# Proyecto 3: Piedra, Papel, Tijera, Lagarto, Spock (CI-3661)
 
 - **Nombres:** (Mauricio Fragachán, Alan Argotte, David Díaz)
 - **Carnets:** (20-10265, 19-10664, 20-10019)
